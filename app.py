@@ -8,7 +8,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-openai.api_key = os.getenv("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")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Load menu
 with open("menu.json") as f:
@@ -63,6 +63,7 @@ def webhook():
         )
 
     return jsonify({"response": response_text})
-    
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
