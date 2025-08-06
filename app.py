@@ -12,34 +12,32 @@ with open("menu.json", "r") as f:
 def home():
     return "✅ Food Bidding Bot is running!"
 
-@app.route("/webhook", methods=["POST"])
+@app.route('/webhook', methods=['POST'])
 def webhook():
     try:
-        user_message = request.form.get("Body")
-        bid_match = re.search(r"(?:order|want|give me|get)\s+([\w\s]+?)\s+(?:for|at)\s+(\d+)", user_message)
-        print( "user_message is {user_message}")
-        if bid_match:
-            item_name = bid_match.group(1).strip()
-            bid_price = int(bid_match.group(2))
+        data = request.get_json()
+        user_message = data.get('message', '').lower()
+        response = "Sorry, I didn’t understand that."
 
-            # Match item from menu (case-insensitive)
-            matched_item = next((item for item in menu if item["name"].lower() == item_name), None)
-
-            if matched_item:
-                if bid_price >= matched_item["min_price"]:
-                    response = f"✅ Bid Accepted for {matched_item['name']} at ₹{bid_price}!"
+        for item, price in menu.items():
+            if item in user_message:
+                # Extract user's offered price
+                import re
+                match = re.search(r'(\d+)', user_message)
+                if match:
+                    offered_price = int(match.group(1))
+                    if offered_price >= price:
+                        response = f"✅ Order confirmed for {item} at ₹{offered_price}!"
+                    else:
+                        response = f"❌ Sorry, we can't accept ₹{offered_price} for {item}. Actual price is ₹{price}."
                 else:
-                    response = f"❌ Bid too low. Minimum price for {matched_item['name']} is ₹{matched_item['min_price']}."
-            else:
-                response = "😕 Sorry, that item is not on the menu."
+                    response = f"The price for {item} is ₹{price}. How much would you like to bid?"
 
-        else:
-            response = "👋 Welcome to the Food Bidding Bot! Try something like: 'I want oreo shake for 70'"
+        return jsonify({"reply": response})
+
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({"reply": "⚠️ An error occurred processing your request."}), 500
-
-        return jsonify({"reply": response}), 200
+        return jsonify({"reply": "Something went wrong processing your request."}), 500
 
     
 
