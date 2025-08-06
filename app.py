@@ -48,21 +48,19 @@ def health_check():
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    data = request.get_json()
-    user_msg = data.get("message", "")
+    msg = request.form.get("Body")
+    sender = request.form.get("From")
 
-    item, bid = parse_bid(user_msg)
-    if item and bid:
-        response_text = generate_response(item, bid)
-    else:
-        response_text = (
-            "👋 Welcome to Bidding Café!\n"
-            "Menu:\n" +
-            "\n".join([f"{k} - ₹{v}" for k, v in MENU.items()]) +
-            "\n\nPlease place a bid like:\nI want Cheese Pizza for ₹70"
-        )
+    print(f"📨 Message from {sender}: {msg}")
 
-    return jsonify({"response": response_text})
+    reply = "Welcome to Food Bidding Bot 🍕! What would you like to order?"
+
+    twiml_response = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Message>{reply}</Message>
+</Response>"""
+
+    return Response(twiml_response, mimetype="application/xml")
 
 
 if __name__ == "__main__":
