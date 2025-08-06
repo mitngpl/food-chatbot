@@ -48,19 +48,24 @@ def health_check():
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    msg = request.form.get("Body")
-    sender = request.form.get("From")
+    try:
+        msg = request.form.get("Body")
+        sender = request.form.get("From")
 
-    print(f"📨 Message from {sender}: {msg}")
+        print(f"📨 Message from {sender}: {msg}")
 
-    reply = "Welcome to Food Bidding Bot 🍕! What would you like to order?"
+        reply = "Welcome to Food Bidding Bot 🍕! What would you like to order?"
 
-    twiml_response = f"""<?xml version="1.0" encoding="UTF-8"?>
+        twiml_response = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Message>{reply}</Message>
 </Response>"""
 
-    return Response(twiml_response, mimetype="application/xml")
+        return Response(twiml_response, mimetype="application/xml")
+
+    except Exception as e:
+        print(f"❌ ERROR: {e}")
+        return "Internal Server Error", 500
 
 
 if __name__ == "__main__":
