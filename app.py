@@ -1,7 +1,17 @@
 from flask import Flask, request, Response
 import traceback
+import re
 
 app = Flask(__name__)
+
+menu = {
+    "cheese pizza": 100,
+    "paneer momos": 80,
+    "oreo shake": 90,
+}
+
+msg = incoming_msg.strip().lower()
+response = ""
 
 @app.route("/", methods=["GET"])
 def home():
