@@ -40,12 +40,13 @@ def webhook():
 
         else:
             response = "👋 Welcome to the Food Bidding Bot! Try something like: 'I want oreo shake for 70'"
-
-        return jsonify({"reply": response}), 200
-
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"reply": "⚠️ An error occurred processing your request."}), 500
+
+        return jsonify({"reply": response}), 200
+
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
