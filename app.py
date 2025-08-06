@@ -15,12 +15,7 @@ def home():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        data = request.get_json()
-        print( "data is {data}")
-        if not data or "message" not in data:
-            return jsonify({"reply": "Invalid request!"}), 400
-
-        user_message = data["message"].lower()
+        user_message = request.form.get("Body")
         bid_match = re.search(r"(?:order|want|give me|get)\s+([\w\s]+?)\s+(?:for|at)\s+(\d+)", user_message)
         print( "user_message is {user_message}")
         if bid_match:
