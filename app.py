@@ -16,13 +16,13 @@ def home():
 def webhook():
     try:
         data = request.get_json()
-
+        print( "data is {data}")
         if not data or "message" not in data:
             return jsonify({"reply": "Invalid request!"}), 400
 
         user_message = data["message"].lower()
         bid_match = re.search(r"(?:order|want|give me|get)\s+([\w\s]+?)\s+(?:for|at)\s+(\d+)", user_message)
-
+        print( "user_message is {user_message}")
         if bid_match:
             item_name = bid_match.group(1).strip()
             bid_price = int(bid_match.group(2))
