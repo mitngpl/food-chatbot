@@ -15,8 +15,14 @@ def home():
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
-        data = request.get_json()
-        print("Incoming data:", data)  # Debug print
+        data = request.get_json(force=True, silent=True)
+        print("Incoming data:", data)
+
+        if not data or 'message' not in data:
+            return jsonify({"reply": "❌ Invalid request. Please send a JSON with a 'message' key."}), 400
+
+        user_message = data['message'].lower()
+
 
         if not data or 'message' not in data:
             return jsonify({"reply": "No message received."}), 400
