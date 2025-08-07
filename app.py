@@ -1,37 +1,44 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, Response
+import traceback
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
-    return "✅ Food Bidding Bot is running!"
+    return "✅ WhatsApp Food Bidding Bot is live!"
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        data = request.get_json()
-        print("📥 Incoming JSON:", data)
-
-        if not data or "message" not in data:
-            return jsonify({"reply": "❌ Invalid request. No message received."}), 400
-
-        message = data["message"].lower()
-        print("📩 Message:", message)
-
-        # Simple bidding logic
-        if "cheese pizza" in message:
-            if "70" in message or "60" in message:
-                return jsonify({"reply": "❌ Sorry, we can't offer Cheese Pizza at that price."})
-            elif "100" in message:
-                return jsonify({"reply": "✅ Deal! Cheese Pizza for ₹100 is accepted."})
-            else:
-                return jsonify({"reply": "🤖 Please quote a price for Cheese Pizza."})
+        # Debug log entire request
+        print("📥 Headers:", request.headers)
+        print("📥 Body:", request.data.decode())
+        
+        # Check content type
+        if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
+            # Twilio sends WhatsApp messages in form format
+            incoming_msg = request.form.get("Body")
+            sender = request.form.get("From")
         else:
-            return jsonify({"reply": "🤖 We don't have that item. Please check the menu."})
+            incoming_msg = "Unable to parse"
+            sender = "Unknown"
+
+        print(f"📨 From: {sender} | Message: {incoming_msg}")
+
+        # Sample response
+        reply = "👋 Welcome to the Food Bidding Bot! What would you like to order?"
+
+        response_msg = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Message>{reply}</Message>
+</Response>"""
+
+        return Response(response_msg, mimetype="application/xml")
 
     except Exception as e:
-        print("❌ Error occurred:", str(e))
-        return jsonify({"reply": "❌ Internal server error"}), 500
+        print("❌ Exception occurred:", str(e))
+        traceback.print_exc()
+        return "Internal Server Error", 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=10000)
