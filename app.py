@@ -2,7 +2,7 @@ import os
 import json
 import openai
 import traceback
-from flask import Flask, request, jsonify
+from flask import Flask, request, Response
 from dotenv import load_dotenv
 
 app = Flask(__name__)
