@@ -1,7 +1,33 @@
 from flask import Flask, request, Response
+import json
 import traceback
 
 app = Flask(__name__)
+
+# Load menu from JSON file
+try:
+    with open("menu.json", "r") as f:
+        menu = json.load(f)
+except Exception as e:
+    print("❌ Could not load menu.json:", e)
+    menu = {}
+
+def process_bidding(message):
+    message = message.lower()
+
+    for item in menu:
+        if item in message:
+            price_words = [int(s) for s in message.split() if s.isdigit()]
+            if not price_words:
+                return f"🤖 The regular price for {item.title()} is ₹{menu[item]}. Please quote your offer price."
+
+            offer = price_words[0]
+            if offer >= menu[item]:
+                return f"✅ Deal! {item.title()} is accepted for ₹{offer}."
+            else:
+                return f"❌ Sorry, we cannot offer {item.title()} at ₹{offer}. Regular price is ₹{menu[item]}."
+    
+    return "🤖 Item not found in the menu. Please try ordering something from our menu: " + ", ".join(menu.keys())
 
 @app.route("/", methods=["GET"])
 def home():
@@ -10,13 +36,10 @@ def home():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        # Debug log entire request
         print("📥 Headers:", request.headers)
         print("📥 Body:", request.data.decode())
-        
-        # Check content type
+
         if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
-            # Twilio sends WhatsApp messages in form format
             incoming_msg = request.form.get("Body")
             sender = request.form.get("From")
         else:
@@ -25,8 +48,7 @@ def webhook():
 
         print(f"📨 From: {sender} | Message: {incoming_msg}")
 
-        # Sample response
-        reply = "👋 Welcome to the Food Bidding Bot! What would you like to order?"
+        reply = process_bidding(incoming_msg)
 
         response_msg = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
