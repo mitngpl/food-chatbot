@@ -12,22 +12,44 @@ except Exception as e:
     print("❌ Could not load menu.json:", e)
     menu = {}
 
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 def process_bidding(message):
-    message = message.lower()
+    try:
+        menu_items = "\n".join([f"{item.title()}: ₹{price}" for item, price in menu.items()])
 
-    for item in menu:
-        if item in message:
-            price_words = [int(s) for s in message.split() if s.isdigit()]
-            if not price_words:
-                return f"🤖 The regular price for {item.title()} is ₹{menu[item]}. Please quote your offer price."
+        prompt = f"""
+You are a witty and polite food ordering bot at a cafe.
+Here is the menu:
+{menu_items}
 
-            offer = price_words[0]
-            if offer >= menu[item]:
-                return f"✅ Deal! {item.title()} is accepted for ₹{offer}."
-            else:
-                return f"❌ Sorry, we cannot offer {item.title()} at ₹{offer}. Regular price is ₹{menu[item]}."
-    
-    return "🤖 Item not found in the menu. Please try ordering something from our menu: " + ", ".join(menu.keys())
+A customer sends this message: "{message}"
+
+Your job is to respond in a friendly, funny tone:
+- If the item exists and their offer is in 20-30% range of actual price, accept happily but try to negotiate once or twice.
+- If offer is low, reject with a light joke.
+- If item is not found, suggest valid items.
+
+Respond in 1–3 short sentences. Use emojis where appropriate.
+"""
+
+        response = openai.ChatCompletion.create(
+            model="gpt-4",  # or "gpt-3.5-turbo"
+            messages=[
+                {"role": "system", "content": "You're a funny and helpful café assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=100,
+            temperature=0.8
+        )
+
+        reply = response['choices'][0]['message']['content'].strip()
+        return reply
+
+    except Exception as e:
+        print("❌ GPT Error:", e)
+        return "🤖 Sorry, something went wrong while generating your response."
+
 
 @app.route("/", methods=["GET"])
 def home():
