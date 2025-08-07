@@ -12,42 +12,34 @@ with open("menu.json", "r") as f:
 def home():
     return "✅ Food Bidding Bot is running!"
 
-@app.route('/webhook', methods=['POST'])
+@app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        data = request.get_json(force=True, silent=True)
+        data = request.get_json()
         print("Incoming data:", data)
 
-        if not data or 'message' not in data:
-            return jsonify({"reply": "❌ Invalid request. Please send a JSON with a 'message' key."}), 400
+        user_msg = data.get("message", "").lower()
 
-        user_message = data['message'].lower()
-
-
-        if not data or 'message' not in data:
-            return jsonify({"reply": "No message received."}), 400
-
-        user_message = data['message'].lower()
-        response = "Sorry, I didn’t understand that."
-
+        # Match menu item and price from user's message
         for item, price in menu.items():
-            if item in user_message:
-                match = re.search(r'(\d+)', user_message)
+            if item in user_msg:
+                match = re.search(r"\b(\d+)\b", user_msg)
                 if match:
                     offered_price = int(match.group(1))
                     if offered_price >= price:
                         response = f"✅ Order confirmed for {item} at ₹{offered_price}!"
                     else:
-                        response = f"❌ Sorry, we can't accept ₹{offered_price} for {item}. Actual price is ₹{price}."
+                        response = f"❌ Sorry, ₹{offered_price} is too low for {item}. Actual price is ₹{price}."
                 else:
-                    response = f"The price for {item} is ₹{price}. How much would you like to bid?"
-                break  # Stop loop once match is found
+                    response = f"🧾 Price for {item} is ₹{price}. How much would you like to bid?"
 
-        return jsonify({"reply": response})
+                return jsonify({"reply": response})
+
+        return jsonify({"reply": "❓ Sorry, I couldn't understand your order. Please mention item and price."})
 
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"reply": "Something went wrong processing your request."}), 500
+        print("Error:", e)
+        return jsonify({"reply": "❌ Internal server error"}), 500
 
 if __name__ == "__main__":
    app.run(debug=True, host="0.0.0.0", port=5000)
