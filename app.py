@@ -4,42 +4,53 @@ import re
 
 app = Flask(__name__)
 
-# Load the menu
+# Load menu
 with open("menu.json", "r") as f:
     menu = json.load(f)
 
 @app.route("/")
 def home():
-    return "✅ Food Bidding Bot is running!"
+    return "✅ Food Bidding Bot is live!"
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
         data = request.get_json()
-        print("Incoming data:", data)
+        print("Received:", data)
 
-        user_msg = data.get("message", "").lower()
+        if not data or "message" not in data:
+            return jsonify({"reply": "❌ Invalid message format"}), 400
 
-        # Match menu item and price from user's message
-        for item, price in menu.items():
-            if item in user_msg:
-                match = re.search(r"\b(\d+)\b", user_msg)
-                if match:
-                    offered_price = int(match.group(1))
-                    if offered_price >= price:
-                        response = f"✅ Order confirmed for {item} at ₹{offered_price}!"
-                    else:
-                        response = f"❌ Sorry, ₹{offered_price} is too low for {item}. Actual price is ₹{price}."
-                else:
-                    response = f"🧾 Price for {item} is ₹{price}. How much would you like to bid?"
+        message = data["message"].lower()
+        print("User message:", message)
 
-                return jsonify({"reply": response})
+        # Try to extract food item and price
+        match = re.search(r"(\w+(?:\s+\w+)*)\s+for\s+(\d+)", message)
+        if not match:
+            return jsonify({"reply": "❌ Could not understand your bid. Try 'cheese pizza for 90'."})
 
-        return jsonify({"reply": "❓ Sorry, I couldn't understand your order. Please mention item and price."})
+        item = match.group(1).strip().lower()
+        offered_price = int(match.group(2))
+
+        # Check menu for item
+        matched_item = None
+        for menu_item in menu["items"]:
+            if item in menu_item["name"].lower():
+                matched_item = menu_item
+                break
+
+        if not matched_item:
+            return jsonify({"reply": f"❌ Sorry, we don't have '{item}' on the menu."})
+
+        actual_price = matched_item["price"]
+        if offered_price >= actual_price:
+            return jsonify({"reply": f"✅ Deal! Your order for {matched_item['name']} at ₹{offered_price} is confirmed."})
+        else:
+            return jsonify({"reply": f"❌ Sorry, ₹{offered_price} is too low for {matched_item['name']}. Actual price is ₹{actual_price}."})
 
     except Exception as e:
-        print("Error:", e)
+        print("Error:", str(e))
         return jsonify({"reply": "❌ Internal server error"}), 500
 
 if __name__ == "__main__":
-   app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)
