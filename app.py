@@ -1,6 +1,7 @@
 import os
 import json
 import openai
+import traceback
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 
