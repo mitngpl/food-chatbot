@@ -16,13 +16,16 @@ def home():
 def webhook():
     try:
         data = request.get_json()
-        user_message = data.get('message', '').lower()
+        print("Incoming data:", data)  # Debug print
+
+        if not data or 'message' not in data:
+            return jsonify({"reply": "No message received."}), 400
+
+        user_message = data['message'].lower()
         response = "Sorry, I didn’t understand that."
 
         for item, price in menu.items():
             if item in user_message:
-                # Extract user's offered price
-                import re
                 match = re.search(r'(\d+)', user_message)
                 if match:
                     offered_price = int(match.group(1))
@@ -32,14 +35,13 @@ def webhook():
                         response = f"❌ Sorry, we can't accept ₹{offered_price} for {item}. Actual price is ₹{price}."
                 else:
                     response = f"The price for {item} is ₹{price}. How much would you like to bid?"
+                break  # Stop loop once match is found
 
         return jsonify({"reply": response})
 
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"reply": "Something went wrong processing your request."}), 500
-
-    
 
 if __name__ == "__main__":
    app.run(debug=True, host="0.0.0.0", port=5000)
