@@ -1,6 +1,8 @@
-from flask import Flask, request, Response
+import os
 import json
-import traceback
+import openai
+from flask import Flask, request, jsonify
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
