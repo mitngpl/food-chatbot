@@ -1,5 +1,5 @@
-[
-  {"name": "oreo shake", "min_price": 60},
-  {"name": "cheese pizza", "min_price": 80},
-  {"name": "paneer momos", "min_price": 70}
-]
+{
+    "paneer momos": 80,
+    "cheese pizza": 120,
+    "oreo shake": 90
+}
