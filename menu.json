@@ -1,8 +1,6 @@
 {
-  "items": [
-    { "name": "Cheese Pizza", "price": 120 },
-    { "name": "Veg Burger", "price": 80 },
-    { "name": "Oreo Shake", "price": 100 },
-    { "name": "Paneer Momos", "price": 90 }
-  ]
+  "cheese pizza": 120,
+  "paneer momos": 90,
+  "oreo shake": 100,
+  "maggi": 60
 }
